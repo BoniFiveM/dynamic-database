@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/database/entities/users';
-import { BaseCustomRepository } from 'src/database/repository/base-custom.repository';
 import { AddressEntity } from 'src/database/entities/address.entity';
-import { DataSource, DataSourceOptions, QueryRunner } from 'typeorm';
-import { MainDataSource } from 'src/database/configuration/main-database';
-import { join } from 'path';
 import { UserRepository } from './repository/user.repository';
+import { AddressRepository } from '../address/repository/address.repository';
+import { join } from 'path';
 
 @Injectable()
 export class UsersService {
@@ -17,7 +16,7 @@ export class UsersService {
     private userRepository: UserRepository,
 
     @InjectRepository(AddressEntity, 'shared')
-    private addressRepository: UserRepository,
+    private addressRepository: AddressRepository, // Agora está correto
   ) {}
 
   async create() {
@@ -34,7 +33,7 @@ export class UsersService {
     });
 
     await mainDataSource.initialize();
-    const queryRunner: QueryRunner = mainDataSource.createQueryRunner();
+    const queryRunner = mainDataSource.createQueryRunner();
     await queryRunner.connect();
 
     try {
@@ -44,7 +43,6 @@ export class UsersService {
       console.log(`Banco de dados ${tenantDbName} criado com sucesso.`);
     } catch (error) {
       if (error.code !== '42P04') {
-        // Código de erro para "banco já existe"
         console.error(`Erro ao criar o banco de dados ${tenantDbName}:`, error);
         throw error;
       }
@@ -56,7 +54,7 @@ export class UsersService {
 
     // Conecte-se ao banco do tenant e execute as migrações
     const tenantDbOptions: DataSourceOptions = {
-      type: 'postgres',
+      type: 'postgres', // Certifique-se de que o tipo de banco de dados seja 'postgres'
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT, 10),
       username: process.env.DB_USER,
@@ -85,7 +83,7 @@ export class UsersService {
   }
 
   async findAll() {
-    return await this.userRepository.findteste();
+    return await this.userRepository.findTeste();
   }
 
   findOne(id: number) {
